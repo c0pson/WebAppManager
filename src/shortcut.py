@@ -3,39 +3,40 @@ from pathlib import Path
 import subprocess
 import argparse
 
-BASE_SHORTCUT_DIR = Path.home() / "WebbApps"
+BASE_SHORTCUT_DIR = Path.home() / ".local/share/applications"
 
-def create_shortcut(icon: str, name: str, url: str, width: int = 1080, height: int = 720): # TODO: Add Icon option to select via system menu
-    desktop_shortcut_path = BASE_SHORTCUT_DIR / f"{name}.desktop"
+def create_shortcut(icon: str, name: str, url: str):
+    desktop_shortcut_path = BASE_SHORTCUT_DIR / f"pyWAM-{name}.desktop"
     BASE_SHORTCUT_DIR.mkdir(parents=True, exist_ok=True)
     app_path = Path(__file__).resolve()
     content = f"""[Desktop Entry]
 Type=Application
 Name={name}
 Icon={icon}
-Exec={app_path} --url {url} --width {width} --height {height}
+Exec="{app_path}" --url "{url.replace('%', '%%')}"
 Terminal=false
 """
     desktop_shortcut_path.write_text(content)
     desktop_shortcut_path.chmod(0o755)
+    subprocess.run(["kbuildsycoca6"], check=False)
     return str(desktop_shortcut_path)
 
 def remove_shortcut(name: str):
-    desktop_shortcut_path = BASE_SHORTCUT_DIR / f"{name}.desktop"
+    desktop_shortcut_path = BASE_SHORTCUT_DIR / f"pyWAM-{name}.desktop"
     try:
         desktop_shortcut_path.unlink()
     except FileNotFoundError:
         print("No such file?")
 
-def update_shortcut(icon, old_name, name, url, width=1080, height=720):
+def update_shortcut(icon, old_name, name, url):
     remove_shortcut(old_name)
-    return create_shortcut(icon, name, url, width, height)
+    return create_shortcut(icon, name, url)
 
-def open_shortcut(url: str, width: int, height: int):
+def open_shortcut(url: str):
     subprocess.run([
         "chromium-browser",
         f"--app={url}",
-        f"--window-size={width},{height}"
+        "--start-maximized"
     ], check=True)
 
 def main():
@@ -44,10 +45,8 @@ def main():
         description="Opens shortcut for given url in 'app' mode",
     )
     parser.add_argument("-u", "--url", required=True)
-    parser.add_argument("--width", type=int, required=True)
-    parser.add_argument("--height", type=int, required=True)
     args = parser.parse_args()
-    open_shortcut(args.url, args.width, args.height)
+    open_shortcut(args.url)
 
 if __name__ == "__main__":
     main()
