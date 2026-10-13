@@ -1,7 +1,7 @@
 import sqlite3
 import os
 
-class Databse:
+class Database:
     def __init__(self):
         self.con = sqlite3.connect(os.path.join("data", "webapps.db"))
         self.cur = self.con.cursor()
@@ -12,6 +12,7 @@ class Databse:
         query = """
         CREATE TABLE IF NOT EXISTS web_apps (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            icon TEXT CHECK(length(icon) <= 2500),
             app_name TEXT NOT NULL CHECK(length(app_name) <= 64),
             url TEXT NOT NULL CHECK(length(url) <= 2000),
             shortcut TEXT NOT NULL CHECK(length(shortcut) <= 2500),
@@ -23,25 +24,25 @@ class Databse:
 
     def get_all(self):
         query = """
-        SELECT id, app_name, url, shortcut, tag FROM web_apps
+        SELECT id, icon, app_name, url, shortcut, tag FROM web_apps
         """
         self.cur.execute(query)
         return self.cur.fetchall()
 
     def get(self, id: int):
         query = """
-            SELECT id, app_name, url, shortcut, tag FROM web_apps
+            SELECT id, icon, app_name, url, shortcut, tag FROM web_apps
             WHERE id = ?
         """
         self.cur.execute(query, (id,))
         return self.cur.fetchone()
 
-    def add(self, app_name: str, url: str, shortcut: str, tag: str | None=None) -> int | None:
+    def add(self, icon, app_name, url, shortcut, tag):
         query = """
-            INSERT INTO web_apps (app_name, url, shortcut, tag)
-            VALUES (?, ?, ?, ?)
+        INSERT INTO web_apps (icon, app_name, url, shortcut, tag)
+        VALUES (?, ?, ?, ?, ?)
         """
-        self.cur.execute(query, (app_name, url, shortcut, tag))
+        self.cur.execute(query, (icon, app_name, url, shortcut, tag))
         self.con.commit()
         return self.cur.lastrowid
 
@@ -53,11 +54,12 @@ class Databse:
         self.cur.execute(query, (id,))
         self.con.commit()
 
-    def update(self, id: int, app_name=None, url=None, shortcut=None, **kwargs):
-        """
-        """
+    def update(self, id: int, icon=None, app_name=None, url=None, shortcut=None, **kwargs):
         fields = []
         values = []
+        if icon is not None:
+            fields.append("icon = ?")
+            values.append(icon)
         if app_name is not None:
             fields.append("app_name = ?")
             values.append(app_name)
@@ -99,5 +101,5 @@ class Databse:
         self.con.commit()
 
 if __name__ == "__main__":
-    db = Databse()
+    db = Database()
     db.get_all()

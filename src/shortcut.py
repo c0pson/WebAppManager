@@ -2,24 +2,34 @@
 from pathlib import Path
 import subprocess
 import argparse
-import os
 
-# REFERENCE: chromium-browser --app='https://keep.google.com/#home' -window-size=1080,720
-# TODO: Add Icon option to select via system menu
-def create_shortcut(name: str, url: str, width: int = 1080, height: int = 720):
-    desktop_shortcut_dir = Path.home() / "WebbApps"
-    desktop_shortcut_path = desktop_shortcut_dir / f"{name}.desktop"
-    desktop_shortcut_dir.mkdir(parents=True, exist_ok=True)
+BASE_SHORTCUT_DIR = Path.home() / "WebbApps"
+
+def create_shortcut(icon: str, name: str, url: str, width: int = 1080, height: int = 720): # TODO: Add Icon option to select via system menu
+    desktop_shortcut_path = BASE_SHORTCUT_DIR / f"{name}.desktop"
+    BASE_SHORTCUT_DIR.mkdir(parents=True, exist_ok=True)
     app_path = Path(__file__).resolve()
     content = f"""[Desktop Entry]
 Type=Application
 Name={name}
+Icon={icon}
 Exec={app_path} --url {url} --width {width} --height {height}
 Terminal=false
 """
     desktop_shortcut_path.write_text(content)
     desktop_shortcut_path.chmod(0o755)
     return str(desktop_shortcut_path)
+
+def remove_shortcut(name: str):
+    desktop_shortcut_path = BASE_SHORTCUT_DIR / f"{name}.desktop"
+    try:
+        desktop_shortcut_path.unlink()
+    except FileNotFoundError:
+        print("No such file?")
+
+def update_shortcut(icon, old_name, name, url, width=1080, height=720):
+    remove_shortcut(old_name)
+    return create_shortcut(icon, name, url, width, height)
 
 def open_shortcut(url: str, width: int, height: int):
     subprocess.run([

@@ -1,29 +1,30 @@
-from PySide6.QtWidgets import QApplication, QVBoxLayout, QMainWindow, QWidget
-from PySide6.QtGui import QFont, QFontDatabase
+from PySide6.QtWidgets import (
+    QApplication,
+    QMainWindow
+)
+from PySide6.QtGui import (
+    QFontDatabase,
+    QIcon
+)
+from PySide6.QtCore import Qt
 
 from web_app_manager import WebAppManager
-from style import load_stylesheet
 
 class Application(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        central = QWidget()
-        self.setCentralWidget(central)
-
         self.app_manager = WebAppManager()
-
-        layout = QVBoxLayout(central)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(self.app_manager)
+        self.setCentralWidget(self.app_manager)
+        self.addToolBar(Qt.ToolBarArea.TopToolBarArea, self.app_manager.app_menu)
 
 if __name__ == "__main__":
     app = QApplication([])
-    app.setApplicationDisplayName("PyWA Manager")
+    app.setApplicationDisplayName("PyWAM")
+    app.setWindowIcon(QIcon.fromTheme("webapp-manager"))
 
     user_font = QFontDatabase.systemFont(QFontDatabase.SystemFont.GeneralFont)
     app.setFont(user_font)
-    load_stylesheet(app)
 
     widget = Application()
     widget.resize(800, 600)
